@@ -4,12 +4,12 @@ All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
-    * Redistributions of source code must retain the above copyright
+ * Redistributions of source code must retain the above copyright
       notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above copyright
+ * Redistributions in binary form must reproduce the above copyright
       notice, this list of conditions and the following disclaimer in the
       documentation and/or other materials provided with the distribution.
-    * Neither the name of STMicroelectronics nor the
+ * Neither the name of STMicroelectronics nor the
       names of its contributors may be used to endorse or promote products
       derived from this software without specific prior written permission.
 
@@ -24,7 +24,7 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-********************************************************************************/
+ ********************************************************************************/
 
 
 #ifndef _VL53L0X_PLATFORM_H_
@@ -64,43 +64,30 @@ extern "C" {
  *
  */
 typedef struct VL53L0X_Dev_t{
-    VL53L0X_DevData_t Data;               /*!< embed ST Ewok Dev  data as "Data"*/
+	VL53L0X_DevData_t Data;               /*!< embed ST Ewok Dev  data as "Data"*/
 
-    /*!< user specific field */
+	/*!< user specific field */
 
-    I2C_HandleTypeDef *I2cHandle;
-    uint8_t   I2cDevAddr;
+	/***********************************/
+	I2C_HandleTypeDef *I2cHandle;
 
-    char    DevLetter;
-
-    int     Id;
-    int     Present;
-    int 	Enabled;
-    int		Ready;
-
-    uint8_t   comms_type;
-    uint16_t  comms_speed_khz;
-
-    uint16_t rangeMillimeter;
+	uint16_t rangeMillimeter;
 
 	// Inputs Pins (GPIO Out)
 	GPIO_TypeDef* XSHUT_GPIOx;
 	uint16_t XSHUT_GPIO_Pin;
+
 	// Output Pins (GPIO In)
 	GPIO_TypeDef* EXTI_GPIOx;
 	uint16_t EXTI_GPIO_Pin;
 	IRQn_Type EXTI_IRQn;
 
 	uint8_t I2cAddr;
+	/***********************************/
 
-    int LeakyRange;
-    int LeakyFirst;
-    uint8_t RangeStatus;
-    uint8_t PreviousRangeStatus;
-    FixPoint1616_t SignalRateRtnMegaCps;
-    uint16_t EffectiveSpadRtnCount;
-    uint32_t StartTime;
-
+	uint8_t   I2cDevAddr;
+	uint8_t   comms_type;
+	uint16_t  comms_speed_khz;
 } VL53L0X_Dev_t;
 
 

@@ -69,7 +69,7 @@ uint8_t Tof_GetDeviceInfo(VL53L0X_Dev_t* myDevice, VL53L0X_DeviceInfo_t* deviceI
 
 /* --------------  EXAMPLE  -------------- */
 
-//#include "tof_sensor.h"
+//#include "CONFIG.h"
 //
 //int main()
 //{
@@ -88,13 +88,16 @@ uint8_t Tof_GetDeviceInfo(VL53L0X_Dev_t* myDevice, VL53L0X_DeviceInfo_t* deviceI
 //Tof_Init(TofSensor);
 //
 //	while(1){
-//		printf("tof_0 : Range %d mm\r\n",tof_sensor[0].rangeMillimeter);
-//		printf("tof_1 : Range %d mm\r\n",tof_sensor[1].rangeMillimeter);
-//		printf("tof_2 : Range %d mm\r\n",tof_sensor[2].rangeMillimeter);
+//		printf("tof_0 : Range %d mm\r\n",TofSensor[0].rangeMillimeter);
+//		printf("tof_1 : Range %d mm\r\n",TofSensor[1].rangeMillimeter);
+//		printf("tof_2 : Range %d mm\r\n",TofSensor[2].rangeMillimeter);
 //		HAL_Delay(250);
 //	}
 // return 0;
 //}
-
+//
+//
+// // XSHUTx -> GPIO Out
+// // tof_x  -> GPIO In EXTI
 
 #endif /* INC_TOF_SENSOR_H_ */
