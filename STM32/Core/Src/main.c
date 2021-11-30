@@ -27,7 +27,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "CONFIG.h"
-#include "RGB_sensor.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -101,7 +100,7 @@ int main(void)
 	HAL_UART_Receive_IT(&huart2,(uint8_t*)msg,1);
 
 
-	//  printf("\r\n --------------------- TIME OF FLIGHT --------------------- \r\n");
+	printf("\r\n --------------------- TIME OF FLIGHT --------------------- \r\n");
 
 	Tof_Init_SetI2C(&TofSensor[0], &hi2c1, 0x55);
 	Tof_Init_SetGPIOs(&TofSensor[0], XSHUT0_GPIO_Port, XSHUT0_Pin, tof_0_GPIO_Port, tof_0_Pin);
@@ -118,9 +117,13 @@ int main(void)
 	Tof_Init(TofSensor);
 
 
-	//  printf("\r\n ---------------------   RGB SENSOR   --------------------- \r\n");
+	printf("\r\n ---------------------   RGB SENSOR   --------------------- \r\n");
 
-	RGB_init();
+	RGB_Init_SetParamGPIOs(&RgbSensor, RGB_OE_GPIO_Port, RGB_OE_Pin, RGB_LED_GPIO_Port, RGB_LED_Pin);
+	RGB_Init_SetOutFreqGPIOs(&RgbSensor, RGB_S0_GPIO_Port, RGB_S0_Pin, RGB_S1_GPIO_Port, RGB_S1_Pin);
+	RGB_Init_SetColorFilterGPIOs(&RgbSensor, RGB_S2_GPIO_Port, RGB_S2_Pin, RGB_S3_GPIO_Port, RGB_S3_Pin);
+
+	RGB_Init(&RgbSensor);
 
 
 	/* USER CODE END 2 */
