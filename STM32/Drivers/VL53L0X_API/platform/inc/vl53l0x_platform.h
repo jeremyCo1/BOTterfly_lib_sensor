@@ -63,7 +63,7 @@ extern "C" {
  * @brief    Generic PAL device type that does link between API and platform abstraction layer
  *
  */
-typedef struct {
+typedef struct VL53L0X_Dev_t{
     VL53L0X_DevData_t Data;               /*!< embed ST Ewok Dev  data as "Data"*/
 
     /*!< user specific field */
@@ -82,6 +82,16 @@ typedef struct {
     uint16_t  comms_speed_khz;
 
     uint16_t rangeMillimeter;
+
+	// Inputs Pins (GPIO Out)
+	GPIO_TypeDef* XSHUT_GPIOx;
+	uint16_t XSHUT_GPIO_Pin;
+	// Output Pins (GPIO In)
+	GPIO_TypeDef* EXTI_GPIOx;
+	uint16_t EXTI_GPIO_Pin;
+	IRQn_Type EXTI_IRQn;
+
+	uint8_t I2cAddr;
 
     int LeakyRange;
     int LeakyFirst;
