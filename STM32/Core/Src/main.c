@@ -140,9 +140,7 @@ int main(void)
 		//	  printf("tof_0 : Range %d mm\r\n",tof_sensor[0].rangeMillimeter);
 		//	  printf("tof_1 : Range %d mm\r\n",tof_sensor[1].rangeMillimeter);
 		//	  printf("tof_2 : Range %d mm\r\n",tof_sensor[2].rangeMillimeter);
-		//	  printf("\r\n");
-		//	  printf(" ----------------------------------------------------------- \r\n");
-		//	  printf("\r\n");
+		//	  printf("\r\n ----------------------------------------------------------- \r\n");
 		//	  HAL_Delay(250);
 
 		printf("frequency = %d\r\n", (int)frequency);

@@ -15,18 +15,18 @@ uint8_t Tof_Init_SetI2C(VL53L0X_Dev_t* device, I2C_HandleTypeDef *hi2c, uint8_t 
 	return 0;
 }
 
-uint8_t Tof_Init_SetEXTI(VL53L0X_Dev_t* device, IRQn_Type EXTIx_IRQn){
-	device->EXTI_IRQn = EXTIx_IRQn;
-
-	return 0;
-}
-
 uint8_t Tof_Init_SetGPIOs(VL53L0X_Dev_t* device, GPIO_TypeDef* XSHUT_GPIOx, uint16_t XSHUT_GPIO_Pin,
 		GPIO_TypeDef* EXTI_GPIOx, uint16_t EXTI_GPIO_Pin){
 	device->XSHUT_GPIOx = XSHUT_GPIOx;
 	device->XSHUT_GPIO_Pin = XSHUT_GPIO_Pin;
 	device->EXTI_GPIOx = EXTI_GPIOx;
 	device->EXTI_GPIO_Pin = EXTI_GPIO_Pin;
+
+	return 0;
+}
+
+uint8_t Tof_Init_SetEXTI(VL53L0X_Dev_t* device, IRQn_Type EXTIx_IRQn){
+	device->EXTI_IRQn = EXTIx_IRQn;
 
 	return 0;
 }
@@ -49,7 +49,7 @@ uint8_t Tof_Init(VL53L0X_Dev_t* device){
 		HAL_GPIO_WritePin(device[i].XSHUT_GPIOx, device[i].XSHUT_GPIO_Pin, GPIO_PIN_SET);
 		HAL_Delay(200);
 		Tof_InitializationFlow(&device[i], (uint8_t)device[i].EXTI_GPIOx->ODR);
-		tof_setDeviceAddr(&device[i], device[i].I2cAddr);
+		Tof_SetDeviceAddr(&device[i], device[i].I2cAddr);
 		HAL_Delay(200);
 	}
 
@@ -64,15 +64,15 @@ uint8_t Tof_Init(VL53L0X_Dev_t* device){
 
 uint8_t Tof_InitializationFlow(VL53L0X_Dev_t* device, uint8_t interruptPin){
 	// Device initialization (~ 40ms)
-	tof_initialization(device);
+	Tof_Initialization(device);
 	HAL_Delay(50);
 
 	// Calibration data loading (~ 1ms)
-	tof_calibration(device);
+	Tof_Calibration(device);
 	HAL_Delay(5);
 
 	// System settings (~ 1ms)
-	tof_settings(device, interruptPin);
+	Tof_Settings(device, interruptPin);
 	HAL_Delay(5);
 
 	VL53L0X_StartMeasurement(device);
@@ -80,7 +80,7 @@ uint8_t Tof_InitializationFlow(VL53L0X_Dev_t* device, uint8_t interruptPin){
 	return 0;
 }
 
-uint8_t tof_initialization(VL53L0X_Dev_t* device){
+uint8_t Tof_Initialization(VL53L0X_Dev_t* device){
 	uint8_t status = VL53L0X_ERROR_NONE;
 
 	// DataInit
@@ -104,7 +104,7 @@ static uint32_t *refSpadCount; static uint8_t *isApertureSpads;
 // Temperature calibration
 static uint8_t *pVhvSettings; static uint8_t *pPhaseCal;
 
-uint8_t tof_calibration(VL53L0X_Dev_t* device){
+uint8_t Tof_Calibration(VL53L0X_Dev_t* device){
 	uint8_t status = VL53L0X_ERROR_NONE;
 
 	// SPADs calibration (~ 10ms)
@@ -122,7 +122,7 @@ uint8_t tof_calibration(VL53L0X_Dev_t* device){
 	return 0;
 }
 
-uint8_t tof_settings(VL53L0X_Dev_t* device, uint8_t interruptPin){
+uint8_t Tof_Settings(VL53L0X_Dev_t* device, uint8_t interruptPin){
 	uint8_t status = VL53L0X_ERROR_NONE;
 
 	// Device mode
@@ -141,7 +141,7 @@ uint8_t tof_settings(VL53L0X_Dev_t* device, uint8_t interruptPin){
 	return 0;
 }
 
-uint8_t tof_setDeviceAddr(VL53L0X_Dev_t* device, uint8_t new_addr){
+uint8_t Tof_SetDeviceAddr(VL53L0X_Dev_t* device, uint8_t new_addr){
 	uint8_t status = VL53L0X_ERROR_NONE;
 
 	if((status = VL53L0X_SetDeviceAddress(device, new_addr)) != VL53L0X_ERROR_NONE){
@@ -153,7 +153,7 @@ uint8_t tof_setDeviceAddr(VL53L0X_Dev_t* device, uint8_t new_addr){
 	return 0;
 }
 
-uint8_t tof_getDeviceInfo(VL53L0X_Dev_t* myDevice, VL53L0X_DeviceInfo_t* deviceInfo){
+uint8_t Tof_GetDeviceInfo(VL53L0X_Dev_t* myDevice, VL53L0X_DeviceInfo_t* deviceInfo){
 	uint8_t status = VL53L0X_ERROR_NONE;
 
 	if((status = VL53L0X_GetDeviceInfo(myDevice, deviceInfo)) != VL53L0X_ERROR_NONE){
