@@ -16,8 +16,6 @@
 #include "vl53l0x_platform.h"
 #include "vl53l0x_device.h"
 
-#define nbOfSensors 3
-
 
 /* -------------- STRUCTURE -------------- */
 
@@ -31,15 +29,22 @@
 //    uint16_t  rangeMillimeter;
 //} VL53L0X_Dev_t;
 
-VL53L0X_Dev_t tof_sensor[nbOfSensors];
+//VL53L0X_Dev_t tof_sensor[nbOfSensors];
 
 
 /* -------------- PROTOTYPE -------------- */
 
-uint8_t tof_init(void);
+uint8_t Tof_Init_SetI2C(VL53L0X_Dev_t* device, I2C_HandleTypeDef *hi2c, uint8_t I2cAddr);
+
+uint8_t Tof_Init_SetGPIOs(VL53L0X_Dev_t* device, GPIO_TypeDef* XSHUT_GPIOx, uint16_t XSHUT_GPIO_Pin,
+		GPIO_TypeDef* EXTI_GPIOx, uint16_t EXTI_GPIO_Pin);
+
+uint8_t Tof_Init_SetEXTI(VL53L0X_Dev_t* device, IRQn_Type EXTIx_IRQn);
+
+uint8_t Tof_Init(VL53L0X_Dev_t* device);
 
 // Initialization Flow
-uint8_t tof_initializationFlow(VL53L0X_Dev_t* device, uint8_t interruptPin);
+uint8_t Tof_InitializationFlow(VL53L0X_Dev_t* device, uint8_t interruptPin);
 
 // Device initialization
 uint8_t tof_initialization(VL53L0X_Dev_t* device);
