@@ -19,6 +19,8 @@
 
 typedef struct RGB_struct{
 	// Input Capture (Timer)
+	TIM_HandleTypeDef* Timer_Handle;
+	uint32_t Timer_Channel;
 
 	// Input Param Pins (GPIO Out)
 	GPIO_TypeDef* OutputEnable_GPIOx;
@@ -38,6 +40,14 @@ typedef struct RGB_struct{
 	GPIO_TypeDef* ColorFilter2_GPIOx;
 	uint16_t ColorFilter2_GPIO_Pin;
 
+	// Color filter value
+	uint16_t red;
+	uint16_t green;
+	uint16_t blue;
+
+	// Result
+	uint8_t isFloorRed; // 1 if yes, else 0
+
 }RGB_struct;
 
 
@@ -47,15 +57,29 @@ typedef struct RGB_struct{
 #define RGB_ERROR_FILTER 1
 #define RGB_ERROR_OF_SCALING 2
 
+
+// Color filter
 #define RGB_RED 0
 #define RGB_BLUE 1
 #define RGB_GREEN 2
 #define RGB_CLEAR 3
 
+// Output frequency range
+#define RGB_OF_FULL_RANGE 100
+#define RGB_OF_20_RANGE 20
+#define RGB_OF_02_RANGE 2
+#define RGB_OF_POWER_DOWN 0
+
+// Timer - calcul frequence
+#define RGB_APBCLOCK 80000000
+#define RGB_PRESCALER 80
+
 extern float frequency;
 
 
 /*************** PROTOTYPES ***************/
+
+uint8_t RGB_Init_SetTimer(RGB_struct* RGB_Sensor, TIM_HandleTypeDef *htim, uint32_t Channel);
 
 uint8_t RGB_Init_SetParamGPIOs(RGB_struct* RGB_Sensor, GPIO_TypeDef* OutputEnable_GPIOx, uint16_t OutputEnable_GPIO_Pin,
 		GPIO_TypeDef* LED_GPIOx, uint16_t LED_GPIO_Pin);

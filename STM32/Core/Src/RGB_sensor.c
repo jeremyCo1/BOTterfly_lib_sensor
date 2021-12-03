@@ -6,6 +6,16 @@
  */
 
 #include "RGB_sensor.h"
+#include "CONFIG.h"
+
+
+uint8_t RGB_Init_SetTimer(RGB_struct* RGB_Sensor, TIM_HandleTypeDef *htim, uint32_t Channel){
+	RGB_Sensor->Timer_Handle = htim;
+	RGB_Sensor->Timer_Channel = Channel;
+
+	HAL_TIM_IC_Start_IT(RGB_Sensor->Timer_Handle, RGB_Sensor->Timer_Channel);
+	return 0;
+}
 
 uint8_t RGB_Init_SetParamGPIOs(RGB_struct* RGB_Sensor, GPIO_TypeDef* OutputEnable_GPIOx, uint16_t OutputEnable_GPIO_Pin,
 		GPIO_TypeDef* LED_GPIOx, uint16_t LED_GPIO_Pin){
@@ -38,13 +48,12 @@ uint8_t RGB_Init_SetColorFilterGPIOs(RGB_struct* RGB_Sensor, GPIO_TypeDef* Color
 }
 
 uint8_t RGB_Init(RGB_struct* RGB_Sensor){
-	uint8_t FULL_RANGE = 100;
 
 	// OE : Output Enable -> DISABLE
 	HAL_GPIO_WritePin(RGB_Sensor->OutputEnable_GPIOx, RGB_Sensor->OutputEnable_GPIO_Pin, GPIO_PIN_SET);
 	HAL_Delay(200);
 
-	RGB_SetOFscaling(RGB_Sensor, FULL_RANGE);
+	RGB_SetOFscaling(RGB_Sensor, RGB_OF_02_RANGE);
 	RGB_SetFilter(RGB_Sensor, RGB_RED);
 
 	// Turn on the LEDs to lights the floor
@@ -54,7 +63,7 @@ uint8_t RGB_Init(RGB_struct* RGB_Sensor){
 	HAL_Delay(200);
 	HAL_GPIO_WritePin(RGB_Sensor->OutputEnable_GPIOx, RGB_Sensor->OutputEnable_GPIO_Pin, GPIO_PIN_RESET);
 
-	HAL_TIM_IC_Start_IT(&htim3, TIM_CHANNEL_1);
+	//HAL_TIM_IC_Start_IT(&htim3, TIM_CHANNEL_1);
 
 	return 0;
 }
@@ -65,22 +74,22 @@ uint8_t RGB_SetFilter(RGB_struct* RGB_Sensor, uint8_t color){
 	switch(color)
 	{
 	case RGB_RED:
-		printf("Filtre ROUGE\r\n");
+		//printf("Filtre ROUGE\r\n");
 		HAL_GPIO_WritePin(RGB_Sensor->ColorFilter1_GPIOx, RGB_Sensor->ColorFilter1_GPIO_Pin, GPIO_PIN_RESET);
 		HAL_GPIO_WritePin(RGB_Sensor->ColorFilter2_GPIOx, RGB_Sensor->ColorFilter2_GPIO_Pin, GPIO_PIN_RESET);
 		break;
 	case RGB_BLUE:
-		printf("Filtre BLEU\r\n");
+		//printf("Filtre BLEU\r\n");
 		HAL_GPIO_WritePin(RGB_Sensor->ColorFilter1_GPIOx, RGB_Sensor->ColorFilter1_GPIO_Pin, GPIO_PIN_RESET);
 		HAL_GPIO_WritePin(RGB_Sensor->ColorFilter2_GPIOx, RGB_Sensor->ColorFilter2_GPIO_Pin, GPIO_PIN_SET);
 		break;
 	case RGB_GREEN:
-		printf("Filtre VERT\r\n");
+		//printf("Filtre VERT\r\n");
 		HAL_GPIO_WritePin(RGB_Sensor->ColorFilter1_GPIOx, RGB_Sensor->ColorFilter1_GPIO_Pin, GPIO_PIN_SET);
 		HAL_GPIO_WritePin(RGB_Sensor->ColorFilter2_GPIOx, RGB_Sensor->ColorFilter2_GPIO_Pin, GPIO_PIN_SET);
 		break;
 	case RGB_CLEAR:
-		printf("Filtre OFF\r\n");
+		//printf("Filtre OFF\r\n");
 		HAL_GPIO_WritePin(RGB_Sensor->ColorFilter1_GPIOx, RGB_Sensor->ColorFilter1_GPIO_Pin, GPIO_PIN_SET);
 		HAL_GPIO_WritePin(RGB_Sensor->ColorFilter2_GPIOx, RGB_Sensor->ColorFilter2_GPIO_Pin, GPIO_PIN_RESET);
 		break;
@@ -131,15 +140,13 @@ uint16_t RGB_GetFreq(){
 	return 0;
 }
 
-#define APBCLOCK 42000000
-#define PRESCALER 42
-
 static uint16_t IC_Val1 = 0;
 static uint16_t IC_Val2 = 0;
 static uint16_t difference = 0;
 static uint8_t isFirstCaptured = 0;
 
 float frequency = 0;
+int colorFilt = 0;
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
@@ -152,9 +159,43 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 		else{
 			IC_Val2 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
 			difference = IC_Val2 - IC_Val1;
-			float refClock = APBCLOCK/(PRESCALER);
+			float refClock = RGB_APBCLOCK/(RGB_PRESCALER);
+
 			frequency = refClock/difference;
 			__HAL_TIM_SET_COUNTER(htim, 0);
+
+			/**********************************************************/
+			switch(colorFilt)
+			{
+			case RGB_RED:
+				RgbSensor.red = (uint16_t)frequency;
+				//printf("ROUGE : %d\r\n", RgbSensor.red);
+				colorFilt = RGB_GREEN;
+				RGB_SetFilter(&RgbSensor, colorFilt);
+				break;
+			case RGB_GREEN:
+				RgbSensor.green = (uint16_t)frequency;
+				//printf("VERT : %d\r\n", RgbSensor.green);
+				colorFilt = RGB_BLUE;
+				RGB_SetFilter(&RgbSensor, colorFilt);
+				break;
+			case RGB_BLUE:
+				RgbSensor.blue = (uint16_t)frequency;
+				//printf("BLEU : %d\r\n", RgbSensor.blue);
+				//printf("\r\n ----------------------------------------------------------- \r\n");
+				colorFilt = RGB_RED;
+				RGB_SetFilter(&RgbSensor, colorFilt);
+				break;
+			default:
+				printf("RGB - Error setFilter\r\n");
+			}
+			if((RgbSensor.red >= (2*RgbSensor.green)) & (RgbSensor.red >= (2*RgbSensor.blue))){
+				RgbSensor.isFloorRed = 1;
+			}else{
+				RgbSensor.isFloorRed = 0;
+			}
+			/**********************************************************/
+
 			isFirstCaptured = 0;
 		}
 	}
