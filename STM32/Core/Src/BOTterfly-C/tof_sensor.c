@@ -1,21 +1,21 @@
 /*
  * tof_sensor.c
  *
- *  Created on: 17 oct. 2021
+ *  Created on: 8 déc. 2021
  *      Author: jerem
  */
 
-#include "tof_sensor.h"
-#include "CONFIG.h"
+#include "BOTterfly-H/tof_sensor.h"
+#include "BOTterfly-H/config.h"
 
-uint8_t Tof_Init_SetI2C(VL53L0X_Dev_t* device, I2C_HandleTypeDef *hi2c, uint8_t I2cAddr){
+uint8_t TOF_Init_SetI2C(VL53L0X_Dev_t* device, I2C_HandleTypeDef *hi2c, uint8_t I2cAddr){
 	device->I2cHandle = hi2c;
 	device->I2cAddr = I2cAddr;
 
 	return 0;
 }
 
-uint8_t Tof_Init_SetGPIOs(VL53L0X_Dev_t* device, GPIO_TypeDef* XSHUT_GPIOx, uint16_t XSHUT_GPIO_Pin,
+uint8_t TOF_Init_SetGPIOs(VL53L0X_Dev_t* device, GPIO_TypeDef* XSHUT_GPIOx, uint16_t XSHUT_GPIO_Pin,
 		GPIO_TypeDef* EXTI_GPIOx, uint16_t EXTI_GPIO_Pin){
 	device->XSHUT_GPIOx = XSHUT_GPIOx;
 	device->XSHUT_GPIO_Pin = XSHUT_GPIO_Pin;
@@ -25,18 +25,20 @@ uint8_t Tof_Init_SetGPIOs(VL53L0X_Dev_t* device, GPIO_TypeDef* XSHUT_GPIOx, uint
 	return 0;
 }
 
-uint8_t Tof_Init_SetEXTI(VL53L0X_Dev_t* device, IRQn_Type EXTIx_IRQn){
+uint8_t TOF_Init_SetEXTI(VL53L0X_Dev_t* device, IRQn_Type EXTIx_IRQn){
 	device->EXTI_IRQn = EXTIx_IRQn;
 
 	return 0;
 }
 
-uint8_t Tof_Init(VL53L0X_Dev_t* device){
+uint8_t TOF_Init(VL53L0X_Dev_t* device){
 	for(int i=0; i<TOF_nbOfSensor; i++){
 		device[i].I2cDevAddr = 0x52;
 		device[i].comms_speed_khz = 400;
 		device[i].comms_type = 1;
 	}
+
+	// Disable the interruptions
 	// Useful for the INITIALIZATION FLOW before changing the address of each device
 	for(int i=0; i<TOF_nbOfSensor; i++){
 		HAL_GPIO_WritePin(device[i].XSHUT_GPIOx, device[i].XSHUT_GPIO_Pin, GPIO_PIN_RESET);
@@ -48,8 +50,8 @@ uint8_t Tof_Init(VL53L0X_Dev_t* device){
 	for(int i=0; i<TOF_nbOfSensor; i++){
 		HAL_GPIO_WritePin(device[i].XSHUT_GPIOx, device[i].XSHUT_GPIO_Pin, GPIO_PIN_SET);
 		HAL_Delay(200);
-		Tof_InitializationFlow(&device[i], (uint8_t)device[i].EXTI_GPIOx->ODR);
-		Tof_SetDeviceAddr(&device[i], device[i].I2cAddr);
+		TOF_InitializationFlow(&device[i], (uint8_t)device[i].EXTI_GPIOx->ODR);
+		TOF_SetDeviceAddr(&device[i], device[i].I2cAddr);
 		HAL_Delay(200);
 	}
 
@@ -62,17 +64,17 @@ uint8_t Tof_Init(VL53L0X_Dev_t* device){
 	return 0;
 }
 
-uint8_t Tof_InitializationFlow(VL53L0X_Dev_t* device, uint8_t interruptPin){
+uint8_t TOF_InitializationFlow(VL53L0X_Dev_t* device, uint8_t interruptPin){
 	// Device initialization (~ 40ms)
-	Tof_Initialization(device);
+	TOF_Initialization(device);
 	HAL_Delay(50);
 
 	// Calibration data loading (~ 1ms)
-	Tof_Calibration(device);
+	TOF_Calibration(device);
 	HAL_Delay(5);
 
 	// System settings (~ 1ms)
-	Tof_Settings(device, interruptPin);
+	TOF_Settings(device, interruptPin);
 	HAL_Delay(5);
 
 	VL53L0X_StartMeasurement(device);
@@ -80,7 +82,7 @@ uint8_t Tof_InitializationFlow(VL53L0X_Dev_t* device, uint8_t interruptPin){
 	return 0;
 }
 
-uint8_t Tof_Initialization(VL53L0X_Dev_t* device){
+uint8_t TOF_Initialization(VL53L0X_Dev_t* device){
 	uint8_t status = VL53L0X_ERROR_NONE;
 
 	// DataInit
@@ -104,7 +106,7 @@ static uint32_t *refSpadCount; static uint8_t *isApertureSpads;
 // Temperature calibration
 static uint8_t *pVhvSettings; static uint8_t *pPhaseCal;
 
-uint8_t Tof_Calibration(VL53L0X_Dev_t* device){
+uint8_t TOF_Calibration(VL53L0X_Dev_t* device){
 	uint8_t status = VL53L0X_ERROR_NONE;
 
 	// SPADs calibration (~ 10ms)
@@ -122,7 +124,7 @@ uint8_t Tof_Calibration(VL53L0X_Dev_t* device){
 	return 0;
 }
 
-uint8_t Tof_Settings(VL53L0X_Dev_t* device, uint8_t interruptPin){
+uint8_t TOF_Settings(VL53L0X_Dev_t* device, uint8_t interruptPin){
 	uint8_t status = VL53L0X_ERROR_NONE;
 
 	// Device mode
@@ -141,7 +143,7 @@ uint8_t Tof_Settings(VL53L0X_Dev_t* device, uint8_t interruptPin){
 	return 0;
 }
 
-uint8_t Tof_SetDeviceAddr(VL53L0X_Dev_t* device, uint8_t new_addr){
+uint8_t TOF_SetDeviceAddr(VL53L0X_Dev_t* device, uint8_t new_addr){
 	uint8_t status = VL53L0X_ERROR_NONE;
 
 	if((status = VL53L0X_SetDeviceAddress(device, new_addr)) != VL53L0X_ERROR_NONE){
@@ -153,7 +155,7 @@ uint8_t Tof_SetDeviceAddr(VL53L0X_Dev_t* device, uint8_t new_addr){
 	return 0;
 }
 
-uint8_t Tof_GetDeviceInfo(VL53L0X_Dev_t* myDevice, VL53L0X_DeviceInfo_t* deviceInfo){
+uint8_t TOF_GetDeviceInfo(VL53L0X_Dev_t* myDevice, VL53L0X_DeviceInfo_t* deviceInfo){
 	uint8_t status = VL53L0X_ERROR_NONE;
 
 	if((status = VL53L0X_GetDeviceInfo(myDevice, deviceInfo)) != VL53L0X_ERROR_NONE){
@@ -174,24 +176,25 @@ uint8_t Tof_GetDeviceInfo(VL53L0X_Dev_t* myDevice, VL53L0X_DeviceInfo_t* deviceI
 VL53L0X_RangingMeasurementData_t VL53L0X_RangingMeasurementData;
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-	if(GPIO_Pin == TofSensor[0].EXTI_GPIO_Pin){
+	if(GPIO_Pin == TOF_Sensor[0].EXTI_GPIO_Pin){
 		uint32_t InterruptMask = 0;
-		VL53L0X_GetRangingMeasurementData(&TofSensor[0], &VL53L0X_RangingMeasurementData);
-		TofSensor[0].rangeMillimeter = VL53L0X_RangingMeasurementData.RangeMilliMeter;
-		VL53L0X_ClearInterruptMask(&TofSensor[0], InterruptMask);
+		VL53L0X_GetRangingMeasurementData(&TOF_Sensor[0], &VL53L0X_RangingMeasurementData);
+		TOF_Sensor[0].rangeMillimeter = VL53L0X_RangingMeasurementData.RangeMilliMeter;
+		VL53L0X_ClearInterruptMask(&TOF_Sensor[0], InterruptMask);
 	}else
-		if(GPIO_Pin == TofSensor[1].EXTI_GPIO_Pin){
+		if(GPIO_Pin == TOF_Sensor[1].EXTI_GPIO_Pin){
 			uint32_t InterruptMask = 0;
-			VL53L0X_GetRangingMeasurementData(&TofSensor[1], &VL53L0X_RangingMeasurementData);
-			TofSensor[1].rangeMillimeter = VL53L0X_RangingMeasurementData.RangeMilliMeter;
-			VL53L0X_ClearInterruptMask(&TofSensor[1], InterruptMask);
+			VL53L0X_GetRangingMeasurementData(&TOF_Sensor[1], &VL53L0X_RangingMeasurementData);
+			TOF_Sensor[1].rangeMillimeter = VL53L0X_RangingMeasurementData.RangeMilliMeter;
+			VL53L0X_ClearInterruptMask(&TOF_Sensor[1], InterruptMask);
 		}else
-			if(GPIO_Pin == TofSensor[2].EXTI_GPIO_Pin){
+			if(GPIO_Pin == TOF_Sensor[2].EXTI_GPIO_Pin){
 				uint32_t InterruptMask = 0;
-				VL53L0X_GetRangingMeasurementData(&TofSensor[2], &VL53L0X_RangingMeasurementData);
-				TofSensor[2].rangeMillimeter = VL53L0X_RangingMeasurementData.RangeMilliMeter;
-				VL53L0X_ClearInterruptMask(&TofSensor[2], InterruptMask);
+				VL53L0X_GetRangingMeasurementData(&TOF_Sensor[2], &VL53L0X_RangingMeasurementData);
+				TOF_Sensor[2].rangeMillimeter = VL53L0X_RangingMeasurementData.RangeMilliMeter;
+				VL53L0X_ClearInterruptMask(&TOF_Sensor[2], InterruptMask);
 			}
 }
+
 
 
